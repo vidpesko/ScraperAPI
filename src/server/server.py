@@ -7,65 +7,71 @@ RPC server tasks:
     3. When URL is received, it should use Nodriver and browser instance to retrieve HTML of that page and return it to the client
 """
 
-import asyncio
+import asyncio, time
+from typing import Callable
+
 import aiormq
-import aiormq.abc
+from aiormq.abc import DeliveredMessage
 
 from nodriver_custom import NodriverCustom
 
 
-def fib(n):
-    if n == 0:
-        return 0
-    elif n == 1:
-        return 1
-    else:
-        return fib(n - 1) + fib(n - 2)
-
-
-async def on_message(message: aiormq.abc.DeliveredMessage):
-    global browser
-
-    url = message.body.decode("ascii")
-    print("Got url:", url)
-
-    page = await browser.get(url)
-
-    await page.select(".GO-OglasThumb")
-
-    content = await page.get_content()
-    # content = "hello"
-
-    response = content.encode()
-
-    await message.channel.basic_publish(
-        response,
-        routing_key=message.header.properties.reply_to,
-        properties=aiormq.spec.Basic.Properties(
-            correlation_id=message.header.properties.correlation_id
-        ),
-    )
-
-    await message.channel.basic_ack(message.delivery.delivery_tag)
-    print("Request complete")
+browser = None  # Global browser instance
 
 
 class RPCServer:
-    async def start_server(self, url: str):
-        """Start RPC server listening on specified queue
+    def __init__(self):
+        self.rabbitmq_url: str | None = None
+        self.queue: str | None = None
+
+    @staticmethod
+    async def on_message(message: DeliveredMessage):
+        start_time = time.perf_counter()
+
+        global browser
+
+        url = message.body.decode()
+        print(" [x] New message:", url)
+
+        # page = await browser.get(url)
+
+        # await page.select(".GO-OglasThumb")
+
+        # content = await page.get_content()
+        # response = content.encode()
+
+        await message.channel.basic_publish(
+            b"response",
+            routing_key=message.header.properties.reply_to,
+            properties=aiormq.spec.Basic.Properties(
+                correlation_id=message.header.properties.correlation_id
+            ),
+        )
+
+        await message.channel.basic_ack(message.delivery.delivery_tag)
+        print(f" [x] Request completed in {time.perf_counter() - start_time} seconds")
+
+    async def setup_server(self, queue: str | None = None, on_message: Callable | None = None):
+        """Starts an RPC server
 
         Args:
-            url (str): url of the message broker
+            queue (str | None): name of the queue to listen on. Defaults to self.queue.
+            on_message (Callable | None): url of the message broker. Defaults to self.on_message method.
         """
-        # Perform connection
-        connection = await aiormq.connect(url)
 
+        queue = queue if queue else self.queue
+
+        if not queue:
+            raise Exception("No queue was specified for RPC Server to listen on")
+
+        on_message = on_message if on_message else self.on_message
+
+        # Perform connection
+        connection = await aiormq.connect(self.rabbitmq_url)
         # Creating a channel
         channel = await connection.channel()
-
         # Declaring queue
-        declare_ok = await channel.queue_declare("rpc_queue")
-
+        declare_ok = await channel.queue_declare(queue)
         # Start listening the queue with name 'hello'
         await channel.basic_consume(declare_ok.queue, on_message)
 
@@ -75,27 +81,30 @@ class RPCServer:
         Initialise a RPC server. It opens up a browser and start listening for URLs on specified queue
         """
 
+        print(" [~] Awaiting RPC requests")
+
         # Open a browser
-        cls.browser = await NodriverCustom.open_browser()
+        global browser
+        browser = await NodriverCustom().open_browser()
 
         # Start RPC server
+        cls.queue = queue
+        cls.rabbitmq_url = rabbitmq_url
+
+        await cls.setup_server(cls)
 
         return cls
 
 
-QUEUE_NAME = "rnd_queue"
-URL = "ampq://localhost/"
-
-async def main():
-    server = await RPCServer.setup(QUEUE_NAME, URL)
-
-
 if __name__ == "__main__":
+    async def main():
+        QUEUE_NAME = "rnd_queue"
+        URL = "amqp://localhost/"
+        server = await RPCServer.setup(QUEUE_NAME, URL)
 
     loop = asyncio.get_event_loop()
     loop.create_task(main())
 
     # we enter a never-ending loop that waits for data
     # and runs callbacks whenever necessary.
-    print(" [x] Awaiting RPC requests")
     loop.run_forever()

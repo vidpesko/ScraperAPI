@@ -6,6 +6,8 @@ Features:
     - Allows for easy use use of proxy network
 """
 
+import asyncio
+
 import nodriver as uc
 
 
@@ -30,32 +32,19 @@ class NodriverCustom:
         Args:
             disable_resources (bool, optional): If you wish to disable page resources, like JS and images. Defaults to True.
         """
-        cls.browser = await uc.start()
+        cls.browser = await uc.start(browser_args=["--no-sandbox"])
 
         if disable_resources:
             await cls.disable_image_loading(cls)
             await cls.disable_js_loading(cls)
-        
-        return cls
 
-    async def get(self, url: str, wait_for: str | None = None) -> uc.Tab:
-        """Navigates to url and retrieves page object
+        return cls.browser
 
-        Args:
-            url (str): page url
-            wait_for (str | None, optional): using await select() to wait for certain element to load. Should be a valid CSS selector. Defaults to None.
-        """
-        page = await self.browser.get(url)
 
-        if wait_for:
-            await page.select(wait_for)
+if __name__ == "__main__":
+    async def main():
+        browser = await NodriverCustom().open_browser()
+        await browser.get("https://www.avto.net/Ads/details.asp?id=20327886")
+        await asyncio.sleep(2)
 
-        return page
-    
-
-    async def get_html(self, *args, **kwargs) -> str:
-        """
-        Retrieve page HTML. Under the hood it calls get() method 
-        """
-        page = await self.get(*args, **kwargs)
-        return await page.get_content()
+    uc.loop().run_until_complete(main())
