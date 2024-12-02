@@ -7,13 +7,16 @@ RPC server tasks:
     3. When URL is received, it should use Nodriver and browser instance to retrieve HTML of that page and return it to the client
 """
 
-import asyncio, time
+import asyncio, time, warnings
 from typing import Callable
 
 import aiormq
 from aiormq.abc import DeliveredMessage
 
 from nodriver_custom import NodriverCustom
+
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 browser = None  # Global browser instance
@@ -67,7 +70,9 @@ class RPCServer:
         on_message = on_message if on_message else self.on_message
 
         # Perform connection
+        print(f"Connecting to the server ['{self.rabbitmq_url}']")
         connection = await aiormq.connect(self.rabbitmq_url)
+        print("Connected!")
         # Creating a channel
         channel = await connection.channel()
         # Declaring queue
@@ -81,8 +86,6 @@ class RPCServer:
         Initialise a RPC server. It opens up a browser and start listening for URLs on specified queue
         """
 
-        print(" [~] Awaiting RPC requests")
-
         # Open a browser
         global browser
         browser = await NodriverCustom().open_browser()
@@ -92,6 +95,8 @@ class RPCServer:
         cls.rabbitmq_url = rabbitmq_url
 
         await cls.setup_server(cls)
+
+        print(" [~] Awaiting RPC requests")
 
         return cls
 

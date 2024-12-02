@@ -12,11 +12,8 @@ RABBITMQ_URL = "amqp://localhost/"
 QUEUE_NAME = "scraper_api_queue"
 
 
-async def run():
-    server = await RPCServer.setup(QUEUE_NAME, RABBITMQ_URL)
-
 loop = asyncio.get_event_loop()
-loop.create_task(run())
+loop.create_task(RPCServer.setup(QUEUE_NAME, RABBITMQ_URL))
 
 # we enter a never-ending loop that waits for data
 # and runs callbacks whenever necessary.
