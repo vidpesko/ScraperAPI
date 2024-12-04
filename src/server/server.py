@@ -7,7 +7,7 @@ RPC server tasks:
     3. When URL is received, it should use Nodriver and browser instance to retrieve HTML of that page and return it to the client
 """
 
-import asyncio, time, warnings
+import asyncio, time, warnings, sys
 from typing import Callable
 
 import aiormq
@@ -36,15 +36,15 @@ class RPCServer:
         url = message.body.decode()
         print(" [x] New message:", url)
 
-        # page = await browser.get(url)
+        page = await browser.get(url)
 
-        # await page.select(".GO-OglasThumb")
+        await page.select(".GO-OglasThumb")
 
-        # content = await page.get_content()
-        # response = content.encode()
+        content = await page.get_content()
+        response = content.encode()
 
         await message.channel.basic_publish(
-            b"response",
+            response,
             routing_key=message.header.properties.reply_to,
             properties=aiormq.spec.Basic.Properties(
                 correlation_id=message.header.properties.correlation_id

@@ -124,4 +124,4 @@ if __name__ == "__main__":
         "https://www.avto.net/Ads/details.asp?id=20336915&display=Mercedes-Benz%20GLE-Razred"
     )
 
-    print(response)
+    # print(response)
