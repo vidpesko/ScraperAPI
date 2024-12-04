@@ -22,5 +22,5 @@ loop.create_task(server)
 try:
     loop.run_forever()
 except KeyboardInterrupt:
-    print("Closing server...")
+    print(" [-] Closing server...")
     sys.exit(0)

@@ -7,19 +7,33 @@ RPC server tasks:
     3. When URL is received, it should use Nodriver and browser instance to retrieve HTML of that page and return it to the client
 """
 
-import asyncio, time, warnings, sys
+import asyncio, time, warnings, sys, ast
 from typing import Callable
 
 import aiormq
 from aiormq.abc import DeliveredMessage
 
-from nodriver_custom import NodriverCustom
+from browser_handler import BrowserHandler
 
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
-browser = None  # Global browser instance
+browser_handler: BrowserHandler | None = None  # Global browser instance
+
+
+def decode_command(command: str) -> tuple[str, dict]:
+    split_cmd = command.split("*params=")
+    if len(split_cmd) == 1:
+        url = command
+        params = {}
+    elif len(split_cmd) == 2:
+        url, params_str = split_cmd
+        params = ast.literal_eval(params_str)
+    else:
+        raise Exception("Got unexpected ''params'' argument in command")
+
+    return url, params
 
 
 class RPCServer:
@@ -31,17 +45,15 @@ class RPCServer:
     async def on_message(message: DeliveredMessage):
         start_time = time.perf_counter()
 
-        global browser
+        global browser_handler
+        url, params = decode_command(message.body.decode())
+        print(f" [x] New scraping request for: {url}  -  {params=}")
 
-        url = message.body.decode()
-        print(" [x] New message:", url)
+        page = await browser_handler.get(
+            url, return_html=True, scraper_params=params
+        )  # get page html
 
-        page = await browser.get(url)
-
-        await page.select(".GO-OglasThumb")
-
-        content = await page.get_content()
-        response = content.encode()
+        response = page.encode()
 
         await message.channel.basic_publish(
             response,
@@ -88,8 +100,9 @@ class RPCServer:
 
         # Open a browser
         print("Opening browser...")
-        global browser
-        browser = await NodriverCustom().open_browser()
+        global browser_handler
+        browser_handler = BrowserHandler()
+        await browser_handler.open_browser()
         print("Browser opened!")
 
         # Start RPC server

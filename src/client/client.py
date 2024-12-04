@@ -1,7 +1,29 @@
-import asyncio, uuid
+import uuid
 
 import aiormq, pika
 from aiormq.abc import DeliveredMessage
+
+
+def generate_command(url: str, scraper_params: dict = None) -> str:
+    """Generate command to send over amqp to server. Encode all scraper parameters to specified format
+
+    Command format:
+        < url >*params={key 1: val 1,...}
+
+    Args:
+        url (str): website url
+        **kwargs (key: value): parameters to send
+
+    Returns:
+        str: generated command
+    """
+
+    if not scraper_params:
+        scraper_params = {}
+
+    command = f"{url}*params={scraper_params}"
+
+    return command
 
 
 class ClientBase:
@@ -80,7 +102,13 @@ class ScraperApiClient(ClientBase):
         if self.corr_id == props.correlation_id:
             self.response = body
 
-    def get(self, n):
+    def get(self, url: str, scraper_params: dict = None):
+        if not scraper_params:
+            scraper_params = {}
+
+        # Generate command
+        command = generate_command(url, scraper_params)
+
         self.response = None
         self.corr_id = str(uuid.uuid4())
         self.channel.basic_publish(
@@ -90,7 +118,7 @@ class ScraperApiClient(ClientBase):
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id,
             ),
-            body=str(n),
+            body=command,
         )
         while self.response is None:
             self.connection.process_data_events(time_limit=None)
@@ -121,7 +149,7 @@ if __name__ == "__main__":
     client.connect()
 
     response = client.get(
-        "https://www.avto.net/Ads/details.asp?id=20336915&display=Mercedes-Benz%20GLE-Razred"
+        "https://www.avto.net/Ads/details.asp?id=20336915&display=Mercedes-Benz%20GLE-Razred", {"wait_for": ".GO-OglasThumb"}
     )
 
     # print(response)
