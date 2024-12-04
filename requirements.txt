@@ -1,3 +1,5 @@
 aiormq
+pika
+
 nodriver
 websockets==13.1

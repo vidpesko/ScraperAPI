@@ -32,7 +32,7 @@ class NodriverCustom:
         Args:
             disable_resources (bool, optional): If you wish to disable page resources, like JS and images. Defaults to True.
         """
-        cls.browser = await uc.start(browser_args=["--no-sandbox"])
+        cls.browser = await uc.start()
 
         if disable_resources:
             await cls.disable_image_loading(cls)

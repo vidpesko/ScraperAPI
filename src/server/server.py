@@ -87,8 +87,10 @@ class RPCServer:
         """
 
         # Open a browser
+        print("Opening browser...")
         global browser
         browser = await NodriverCustom().open_browser()
+        print("Browser opened!")
 
         # Start RPC server
         cls.queue = queue
