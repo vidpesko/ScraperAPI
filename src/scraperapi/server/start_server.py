@@ -4,7 +4,7 @@ Script to set server parameters and then start it from CLI
 
 import sys, argparse, asyncio
 
-from server import RPCServer
+from .server import RPCServer
 
 
 # Default settings

@@ -13,7 +13,7 @@ from typing import Callable
 import aiormq
 from aiormq.abc import DeliveredMessage
 
-from browser_handler import BrowserHandler
+from .browser_handler import BrowserHandler
 
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)

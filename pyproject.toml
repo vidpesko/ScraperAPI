@@ -1,0 +1,19 @@
+[project]
+name = "scraperapi"
+version = "0.0.1"
+dynamic = ["dependencies"]
+requires-python = ">= 3.12"
+authors = [
+    {name = "Vid Pesko", email = "vid@pesko.si"},
+]
+maintainers = [
+    {name = "Vid Pesko", email = "vid@pesko.si"}
+]
+readme = "README.md"
+license = {file = "LICENSE"}
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[project.scripts]
+scraperapi-startserver = "scraperapi.server:start_server"
