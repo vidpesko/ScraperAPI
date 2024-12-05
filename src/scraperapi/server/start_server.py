@@ -1,5 +1,7 @@
 """
 Script to set server parameters and then start it from CLI
+
+TODO - handle CLI parameters
 """
 
 import sys, argparse, asyncio
