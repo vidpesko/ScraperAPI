@@ -5,7 +5,11 @@ RPC server tasks:
     1. Listen on specified queue for incoming URLs
     2. Open global browser instance
     3. When URL is received, it should use Nodriver and browser instance to retrieve HTML of that page and return it to the client
+
+TODO - Handle Tab.select timeouts -> send response with info about timeout
+TODO - When server starts, check for queued up messages. Handle them (now it executes them)
 """
+
 
 import asyncio, time, warnings, sys, ast
 from typing import Callable
