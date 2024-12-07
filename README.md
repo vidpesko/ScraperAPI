@@ -5,17 +5,16 @@ Easily scrape websites protected by Cloudflare Bot Managment (or websites that r
 You might be asking, what is the purpose of this package, when other similar packages exist (like nodriver and undetected-chromedriver). The problem with packages like nodriver is, that they do not work well for real-time scraping.
 
 Example of scraping with nodriver:
-``
-import nodriver as uc
 
-async def main():
+    import nodriver as uc
 
-    browser = await uc.start()
-    page = await browser.get('https://www.nowsecure.nl')
-    html = await page.get_content()
+    async def main():
 
-uc.loop().run_until_complete(main())  # Execution time is around 2 seconds
-``
+        browser = await uc.start()
+        page = await browser.get('https://www.nowsecure.nl')
+        html = await page.get_content()
+
+    uc.loop().run_until_complete(main())  # Execution time is around 2 seconds
 
 If we were to build API around this code, users would have to wait 2 or more seconds for every request.
 
@@ -29,11 +28,10 @@ If we profile previous code we see, that most of the time is spent waiting for b
 
 ## Example
 Simple get request:
-``
-from scraperapi.client import ScraperApiClient
 
-client = ScraperApiClient("amqp://localhost/", "request_queue")
-client.connect()
+    from scraperapi.client import ScraperApiClient
 
-response = client.get("https://www.nowsecure.nl")
-``
+    client = ScraperApiClient("amqp://localhost/", "request_queue")
+    client.connect()
+
+    response = client.get("https://www.nowsecure.nl")
