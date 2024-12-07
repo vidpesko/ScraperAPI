@@ -21,7 +21,7 @@ If we were to build API around this code, users would have to wait 2 or more sec
 ## The solution
 If we profile previous code we see, that most of the time is spent waiting for browser window to open. If the website has many images and other resource-intensive content, then a big chunk of time is spent waiting for page to load.
 
-First problem is solved by launching one global browser instance and fetching all requests through it. This is implemented using RPC for inter-process communication. You start the server, which launches browser and then using ScraperAPIClient class you connect to it and execute requests. Server uses AMQP standard, so you should install a broker and start the server (I am using RabbitMQ)
+First problem is solved by launching one global browser instance and fetching all requests through it. This is implemented using RPC for inter-process communication. You start the server, which launches browser and then using ScraperAPIClient class you connect to it and execute requests. Server uses AMQP standard, so you should install a broker and start the server (I am using RabbitMQ).
 
 Second problem is solved with disabling images and JS to load. These two steps drastically reduce the amount of time for each get request (from 2 seconds to 0.4 on average)
 
@@ -38,4 +38,4 @@ Simple get request:
     client = ScraperApiClient("amqp://localhost/", "request_queue")
     client.connect()
 
-    response = client.get("https://www.nowsecure.nl")
+    response = client.get("https://www.nowsecure.nl")  # client.get() returns HTML of the requested website
