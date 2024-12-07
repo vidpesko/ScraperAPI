@@ -3,7 +3,7 @@ import uuid
 import aiormq, pika
 from aiormq.abc import DeliveredMessage
 
-from .shared import utils
+from .shared.utils import encode_message
 
 
 class ClientBase:
@@ -87,17 +87,17 @@ class ScraperApiClient(ClientBase):
 
         Args:
             url (str): url of website
-            scraper_params (dict, optional): _description_. Defaults to None.
+            scraper_params (dict, optional): additional parameters for scraper. Defaults to None.
 
         Returns:
-            str: HTML of that website
+            str: HTML of requested website
         """
 
         if not scraper_params:
             scraper_params = {}
 
         # Generate command
-        command = utils.generate_command(url, scraper_params)
+        command = encode_message(url, scraper_params)
 
         self.response = None
         self.corr_id = str(uuid.uuid4())
@@ -133,8 +133,12 @@ if __name__ == "__main__":
 
     # Sync code
 
+    scraper_params = {
+        "hello": 10
+    }
+
     client = ScraperApiClient("amqp://localhost/", "avtonet_api_queue")
     client.connect()
-    response = client.get("https://www.nowsecure.nl")
+    response = client.get("https://www.nowsecure.nl", scraper_params)
 
     # print(response)

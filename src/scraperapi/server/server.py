@@ -17,7 +17,7 @@ from typing import Callable
 import aiormq
 from aiormq.abc import DeliveredMessage
 
-from ..shared import utils
+from ..shared.utils import decode_message
 from .browser_handler import BrowserHandler
 
 
@@ -37,7 +37,7 @@ class RPCServer:
         start_time = time.perf_counter()
 
         global browser_handler
-        url, params = utils.decode_command(message.body.decode())
+        url, params = decode_message(message.body.decode())
         print(f" [x] New scraping request for: {url}  -  {params=}")
 
         page = await browser_handler.get(

@@ -1,49 +1,51 @@
-import ast
+import ast, json
 
 
-def decode_command(command: str) -> tuple[str, dict]:
-    """Decode received command
+def decode_message(message: str) -> tuple[str, dict]:
+    """Decode received message
 
     Args:
-        command (str): string command
+        message (str): string message
 
     Raises:
-        Exception: 
+        Exception:
 
     Returns:
         tuple[str, dict]: url, {params}
     """
 
-    split_cmd = command.split("*params=")
-    if len(split_cmd) == 1:
-        url = command
-        params = {}
-    elif len(split_cmd) == 2:
-        url, params_str = split_cmd
-        params = ast.literal_eval(params_str)
-    else:
-        raise Exception("Got unexpected ''params'' argument in command")
+    print(message)
+    message_dict = json.loads(message)
+
+    url = message_dict["url"]
+    params = message_dict.get("parameters", {})
 
     return url, params
 
 
-def generate_command(url: str, scraper_params: dict = None) -> str:
-    """Generate command to send over amqp to server. Encode all scraper parameters to specified format
+def encode_message(url: str, scraper_params: dict = None) -> str:
+    """Generate message to send over amqp to server. Encode all scraper parameters to JSON
 
-    Command format:
-        < url >*params={key 1: val 1,...}
+    #### Command format:
+        {
+            "url": ""
+            "parameters": {}
+        }
 
     Args:
         url (str): website url
         **kwargs (key: value): parameters to send
 
     Returns:
-        str: generated command
+        str: generated message
     """
 
     if not scraper_params:
         scraper_params = {}
 
-    command = f"{url}*params={scraper_params}"
+    message = {
+        "url": url,
+        "parameters": scraper_params
+    }
 
-    return command
+    return json.dumps(message)
