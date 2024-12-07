@@ -3,27 +3,7 @@ import uuid
 import aiormq, pika
 from aiormq.abc import DeliveredMessage
 
-
-def generate_command(url: str, scraper_params: dict = None) -> str:
-    """Generate command to send over amqp to server. Encode all scraper parameters to specified format
-
-    Command format:
-        < url >*params={key 1: val 1,...}
-
-    Args:
-        url (str): website url
-        **kwargs (key: value): parameters to send
-
-    Returns:
-        str: generated command
-    """
-
-    if not scraper_params:
-        scraper_params = {}
-
-    command = f"{url}*params={scraper_params}"
-
-    return command
+from .shared import utils
 
 
 class ClientBase:
@@ -102,12 +82,22 @@ class ScraperApiClient(ClientBase):
         if self.corr_id == props.correlation_id:
             self.response = body
 
-    def get(self, url: str, scraper_params: dict = None):
+    def get(self, url: str, scraper_params: dict = None) -> str:
+        """Similar to get request: send get request to website via ScraperAPI
+
+        Args:
+            url (str): url of website
+            scraper_params (dict, optional): _description_. Defaults to None.
+
+        Returns:
+            str: HTML of that website
+        """
+
         if not scraper_params:
             scraper_params = {}
 
         # Generate command
-        command = generate_command(url, scraper_params)
+        command = utils.generate_command(url, scraper_params)
 
         self.response = None
         self.corr_id = str(uuid.uuid4())
@@ -139,17 +129,12 @@ if __name__ == "__main__":
     #     )
     #     print(response[:10])
 
-
     # loop.run_until_complete(main())
-
 
     # Sync code
 
     client = ScraperApiClient("amqp://localhost/", "avtonet_api_queue")
     client.connect()
-
-    response = client.get(
-        "https://www.avto.net/Ads/details.asp?id=20336915&display=Mercedes-Benz%20GLE-Razred", {"wait_for": ".GO-OglasThumb"}
-    )
+    response = client.get("https://www.nowsecure.nl")
 
     # print(response)

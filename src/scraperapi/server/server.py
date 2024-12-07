@@ -11,12 +11,13 @@ TODO - When server starts, check for queued up messages. Handle them (now it exe
 """
 
 
-import asyncio, time, warnings, sys, ast
+import asyncio, time, warnings
 from typing import Callable
 
 import aiormq
 from aiormq.abc import DeliveredMessage
 
+from ..shared import utils
 from .browser_handler import BrowserHandler
 
 
@@ -24,20 +25,6 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 browser_handler: BrowserHandler | None = None  # Global browser instance
-
-
-def decode_command(command: str) -> tuple[str, dict]:
-    split_cmd = command.split("*params=")
-    if len(split_cmd) == 1:
-        url = command
-        params = {}
-    elif len(split_cmd) == 2:
-        url, params_str = split_cmd
-        params = ast.literal_eval(params_str)
-    else:
-        raise Exception("Got unexpected ''params'' argument in command")
-
-    return url, params
 
 
 class RPCServer:
@@ -50,7 +37,7 @@ class RPCServer:
         start_time = time.perf_counter()
 
         global browser_handler
-        url, params = decode_command(message.body.decode())
+        url, params = utils.decode_command(message.body.decode())
         print(f" [x] New scraping request for: {url}  -  {params=}")
 
         page = await browser_handler.get(
