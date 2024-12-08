@@ -1,3 +1,9 @@
+"""
+Client for interacting with server
+
+TODO - If server isn't started and client sends get request, it will freeze. Fix this. Client should inform user that server isn't running.
+"""
+
 import uuid
 
 import aiormq, pika
@@ -98,7 +104,6 @@ class ScraperApiClient(ClientBase):
 
         # Generate command
         command = encode_command(url, scraper_params)
-        print(command)
 
         self.response = None
         self.corr_id = str(uuid.uuid4())
