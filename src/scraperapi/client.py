@@ -98,6 +98,7 @@ class ScraperApiClient(ClientBase):
 
         # Generate command
         command = encode_command(url, scraper_params)
+        print(command)
 
         self.response = None
         self.corr_id = str(uuid.uuid4())
