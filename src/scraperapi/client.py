@@ -4,7 +4,7 @@ Client for interacting with server
 TODO - If server isn't started and client sends get request, it will freeze. Fix this. Client should inform user that server isn't running.
 """
 
-import uuid
+import uuid, json
 
 import aiormq, pika
 from aiormq.abc import DeliveredMessage
@@ -88,7 +88,7 @@ class ScraperApiClient(ClientBase):
         if self.corr_id == props.correlation_id:
             self.response = body
 
-    def get(self, url: str, scraper_params: dict = None) -> str:
+    def get(self, url: str, scraper_params: dict = None) -> dict:
         """Similar to get request: send get request to website via ScraperAPI
 
         Args:
@@ -118,7 +118,8 @@ class ScraperApiClient(ClientBase):
         )
         while self.response is None:
             self.connection.process_data_events(time_limit=None)
-        return self.response.decode()
+
+        return json.loads(self.response.decode())
 
 
 if __name__ == "__main__":
@@ -139,7 +140,7 @@ if __name__ == "__main__":
 
     # Sync code
 
-    scraper_params = {"wait_for": ".something", "wait_for_timeout": 2}
+    scraper_params = {"wait_fo2r": ".something", "wait_for_timeout": 2}
 
     client = ScraperApiClient("amqp://localhost/", "avtonet_api_queue")
     client.connect()
