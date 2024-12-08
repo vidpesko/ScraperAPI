@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
     # Sync code
 
-    scraper_params = {"wait_for2": ".something", "wait_for_timeout": 2}
+    scraper_params = {"wait_for": ".something", "wait_for_timeout": 2}
 
     client = ScraperApiClient("amqp://localhost/", "avtonet_api_queue")
     client.connect()

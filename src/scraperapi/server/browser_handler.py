@@ -12,6 +12,10 @@ import asyncio
 import nodriver as uc
 
 
+# Global settings
+WAIT_FOR_TIMEOUT = 10
+
+
 class BrowserHandler:
     def __init__(self):
         self.browsers: list[uc.Browser] = []
@@ -58,7 +62,8 @@ class BrowserHandler:
 
         if scraper_params.get("wait_for", False):
             try:
-                await page.select(scraper_params["wait_for"])
+                timeout = scraper_params.get("wait_for_timeout", WAIT_FOR_TIMEOUT)
+                await page.select(scraper_params["wait_for"], timeout)
             except TimeoutError as e:
                 print("Timeout reached")
 
