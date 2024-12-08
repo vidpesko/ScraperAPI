@@ -40,12 +40,31 @@ class BrowserHandler:
 
         self.browsers.append(browser)
 
-    async def get(self, url: str, return_html: bool = False, scraper_params: dict = None) -> uc.Tab | str:
+    async def get(self, url: str, return_html: bool = False, scraper_params: dict = None, raise_error = False) -> uc.Tab | str | Exception:
+        """Open provided url in tab and return page
+
+        Args:
+            url (str): URL of website
+            return_html (bool, optional): If True returns HTML as string instead of uc.Tab object. Defaults to False.
+            scraper_params (dict, optional): Additional parameters for scraper. Defaults to None.
+            scraper_params (dict, optional): If you wish for this method to raise execptions. If False, it will handle all execptions and return Exception object. Defaults to False.
+
+        Returns:
+            uc.Tab | str | Exception: Returns Exception instance if execption has occured
+        """
+
         browser = self.browsers[0]
         page = await browser.get(url)
 
         if scraper_params.get("wait_for", False):
-            await page.select(scraper_params["wait_for"])
+            try:
+                await page.select(scraper_params["wait_for"])
+            except TimeoutError as e:
+                print("Timeout reached")
+
+                if raise_error:
+                    raise e
+                return e
         # Other parameters ...
 
         return await page.get_content() if return_html else page

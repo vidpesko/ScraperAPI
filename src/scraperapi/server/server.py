@@ -10,14 +10,13 @@ TODO - Handle Tab.select timeouts -> send response with info about timeout
 TODO - When server starts, check for queued up messages. Handle them (now it executes them)
 """
 
-
 import asyncio, time, warnings
 from typing import Callable
 
 import aiormq
 from aiormq.abc import DeliveredMessage
 
-from ..shared.utils import decode_message
+from ..shared.message_utils import decode_command, encode_exception, encode_response
 from .browser_handler import BrowserHandler
 
 
@@ -37,14 +36,18 @@ class RPCServer:
         start_time = time.perf_counter()
 
         global browser_handler
-        url, params = decode_message(message.body.decode())
+        url, params = decode_command(message.body.decode())
         print(f" [x] New scraping request for: {url}  -  {params=}")
 
         page = await browser_handler.get(
             url, return_html=True, scraper_params=params
         )  # get page html
 
-        response = page.encode()
+        # If any exception has occured in .get() request, page will be Exception instance
+        if isinstance(page, Exception):
+            response = encode_exception(page, url, params)
+        else:
+            response = encode_response(page, url, params)
 
         await message.channel.basic_publish(
             response,
@@ -57,7 +60,9 @@ class RPCServer:
         await message.channel.basic_ack(message.delivery.delivery_tag)
         print(f" [x] Request completed in {time.perf_counter() - start_time} seconds")
 
-    async def setup_server(self, queue: str | None = None, on_message: Callable | None = None):
+    async def setup_server(
+        self, queue: str | None = None, on_message: Callable | None = None
+    ):
         """Starts an RPC server
 
         Args:
@@ -108,6 +113,7 @@ class RPCServer:
 
 
 if __name__ == "__main__":
+
     async def main():
         QUEUE_NAME = "rnd_queue"
         URL = "amqp://localhost/"
