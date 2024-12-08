@@ -3,7 +3,7 @@ import uuid
 import aiormq, pika
 from aiormq.abc import DeliveredMessage
 
-from shared.message_utils import encode_command
+from .shared.message_utils import encode_command
 
 
 class ClientBase:

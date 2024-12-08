@@ -27,6 +27,7 @@ def decode_command(message: str) -> tuple[str, dict]:
         tuple[str, dict]: url, {params}
     """
 
+    print(message)
     message_dict = json.loads(message)
 
     url = message_dict["url"]
