@@ -4,12 +4,15 @@ Client for interacting with server
 TODO - If server isn't started and client sends get request, it will freeze. Fix this. Client should inform user that server isn't running.
 """
 
-import uuid, json
+import uuid, json, time
 
 import aiormq, pika
 from aiormq.abc import DeliveredMessage
 
-from .shared.message_utils import encode_command
+try:
+    from .shared.message_utils import encode_command
+except ImportError:
+    from shared.message_utils import encode_command  # type: ignore
 
 
 class ClientBase:
@@ -88,12 +91,16 @@ class ScraperApiClient(ClientBase):
         if self.corr_id == props.correlation_id:
             self.response = body
 
-    def get(self, url: str, scraper_params: dict = None) -> dict:
+    def get(self, url: str, scraper_params: dict = None, timeout: int = 5) -> dict:
         """Similar to get request: send get request to website via ScraperAPI
 
         Args:
             url (str): url of website
             scraper_params (dict, optional): additional parameters for scraper. Defaults to None.
+            timeout (int): timeout in seconds. If reached, raise TimeoutException. Defaults to 5.
+
+        Raises:
+            TimeoutError: if waiting for response tooks longer than specified timeout
 
         Returns:
             str: HTML of requested website
@@ -101,6 +108,7 @@ class ScraperApiClient(ClientBase):
 
         if not scraper_params:
             scraper_params = {}
+
 
         # Generate command
         command = encode_command(url, scraper_params)
@@ -116,8 +124,14 @@ class ScraperApiClient(ClientBase):
             ),
             body=command,
         )
+
+        start_time = time.perf_counter()
         while self.response is None:
-            self.connection.process_data_events(time_limit=None)
+            self.connection.process_data_events(time_limit=0)
+
+            time_delta = time.perf_counter() - start_time
+            if time_delta > timeout:
+                raise TimeoutError("Timeout reached. Check if RPC server is really running or try restarting it")
 
         return json.loads(self.response.decode())
 
@@ -140,10 +154,13 @@ if __name__ == "__main__":
 
     # Sync code
 
+    start = time.perf_counter()
     scraper_params = {"wait_fo2r": ".something", "wait_for_timeout": 2}
 
     client = ScraperApiClient("amqp://localhost/", "avtonet_api_queue")
     client.connect()
-    response = client.get("https://www.nowsecure.nl", scraper_params)
+    response = client.get(
+        "https://www.avto.net/Ads/details.asp?ID=20178302", scraper_params
+    )
 
-    print(response)
+    print(time.perf_counter() - start)

@@ -7,6 +7,7 @@ RPC server tasks:
     3. When URL is received, it should use Nodriver and browser instance to retrieve HTML of that page and return it to the client
 
 TODO - If server isn't started and client sends get request, it will freeze. Fix this. Client should inform user that server isn't running.
+TODO - If server receives a request after a period of inactivity, it will freeze and fail
 """
 
 import asyncio, time, warnings
