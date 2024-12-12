@@ -6,7 +6,6 @@ RPC server tasks:
     2. Open global browser instance
     3. When URL is received, it should use Nodriver and browser instance to retrieve HTML of that page and return it to the client
 
-TODO - If server isn't started and client sends get request, it will freeze. Fix this. Client should inform user that server isn't running.
 TODO - If server receives a request after a period of inactivity, it will freeze and fail
 """
 
@@ -81,12 +80,11 @@ class RPCServer:
         print(f"Connecting to the server ['{self.rabbitmq_url}']")
         connection = await aiormq.connect(self.rabbitmq_url)
         print("Connected!")
-        # Creating a channel
-        channel = await connection.channel()
-        # Declaring queue
-        declare_ok = await channel.queue_declare(queue)
-        # Start listening the queue with name 'hello'
-        await channel.basic_consume(declare_ok.queue, on_message)
+
+        channel = await connection.channel()  # Creating a channel
+        declare_ok = await channel.queue_declare(queue)  # Declaring queue
+        await channel.queue_purge(declare_ok.queue)  # Purge queue to remove all old message
+        await channel.basic_consume(declare_ok.queue, on_message)  # Start consuming/listening on queue
 
     @classmethod
     async def setup(cls, queue: str, rabbitmq_url: str):
