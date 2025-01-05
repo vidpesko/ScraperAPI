@@ -160,7 +160,11 @@ if __name__ == "__main__":
     client = ScraperApiClient("amqp://localhost/", "avtonet_api_queue")
     client.connect()
     response = client.get(
-        "https://www.avto.net/Ads/details.asp?ID=20178302", scraper_params
+        "https://www.avto.net/Ads/details.asp?id=20388158&display=BMW%20serija%203%20Touring:",
+        scraper_params,
     )
+
+    with open("company.html", "w") as f:
+        f.write(response["html"])
 
     print(time.perf_counter() - start)
