@@ -121,5 +121,4 @@ if __name__ == "__main__":
     loop.create_task(main())
 
     # we enter a never-ending loop that waits for data
-    # and runs callbacks whenever necessary.
     loop.run_forever()
