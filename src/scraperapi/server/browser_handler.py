@@ -36,7 +36,14 @@ class BrowserHandler:
         Args:
             disable_resources (bool, optional): If you wish to disable page resources, like JS and images. Defaults to True.
         """
-        browser = await uc.start()
+        try:
+            browser = await uc.start()
+        except Exception:
+            print("Exception. Disabling sandbox (using --no-sandbox command) and retrying...")
+            browser = await uc.start(
+                sandbox=False,
+                browser_args=["--no-sandbox"],
+            )
 
         if disable_resources:
             await self.disable_image_loading(browser)
