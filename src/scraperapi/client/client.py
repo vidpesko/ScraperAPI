@@ -4,7 +4,8 @@ Client for interacting with server
 TODO - If server isn't started and client sends get request, it will freeze. Fix this. Client should inform user that server isn't running.
 """
 
-import uuid, json, time
+from pathlib import Path
+import uuid, json, time, sys
 
 import aiormq, pika
 from aiormq.abc import DeliveredMessage
@@ -12,6 +13,8 @@ from aiormq.abc import DeliveredMessage
 try:
     from ..shared.message_utils import encode_command
 except ImportError:
+    path = Path.cwd()
+    sys.path.append(str(path))
     from shared.message_utils import encode_command  # type: ignore
 
 
