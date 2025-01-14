@@ -10,7 +10,7 @@ import aiormq, pika
 from aiormq.abc import DeliveredMessage
 
 try:
-    from .shared.message_utils import encode_command
+    from ..shared.message_utils import encode_command
 except ImportError:
     from shared.message_utils import encode_command  # type: ignore
 

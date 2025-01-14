@@ -17,3 +17,4 @@ dependencies = {file = ["requirements.txt"]}
 
 [project.scripts]
 scraperapi-startserver = "scraperapi.server:start_server"
+scraperapi-testserver = "scraperapi.client:test_client"
